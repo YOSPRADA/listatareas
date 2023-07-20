@@ -3,14 +3,14 @@ const descriptionInput = document.getElementById('description-input');
 const addTaskBtn = document.getElementById('add-task-btn');
 const taskList = document.getElementById('task-list');
 
-addTaskBtn.addEventListener('click', addTask);
-
 let tasks = [];
+let taskIdCounter = 1;
 
 window.addEventListener('load', () => {
     const savedTasks = localStorage.getItem('tasks');
     if (savedTasks) {
         tasks = JSON.parse(savedTasks);
+        taskIdCounter = tasks.length > 0 ? Math.max(...tasks.map(task => task.id)) + 1 : 1;
         renderTasks();
     }
 });
@@ -21,12 +21,15 @@ function addTask() {
 
     if (taskText.length >= 3 && taskDescription.length >= 3) {
         const task = {
+            id: taskIdCounter,
             title: taskText,
-            description: taskDescription
+            description: taskDescription,
+            completed: false
         };
 
         tasks.push(task);
         saveTasks();
+        taskIdCounter++;
         renderTasks();
 
         taskInput.value = '';
@@ -43,7 +46,11 @@ function renderTasks() {
         const task = tasks[i];
         const li = document.createElement('li');
         li.classList.add('task');
-        
+
+        if (task.completed) {
+            li.classList.add('completed');
+        }
+
         const titleElement = document.createElement('div');
         titleElement.classList.add('title');
         titleElement.innerText = task.title;
@@ -62,10 +69,16 @@ function renderTasks() {
         deleteBtn.innerText = 'Eliminar';
         deleteBtn.addEventListener('click', () => deleteTask(i));
 
+        const completedBtn = document.createElement('button');
+        completedBtn.classList.add('completed-btn');
+        completedBtn.innerText = task.completed ? 'completada' : ' no completada';
+        completedBtn.addEventListener('click', () => toggleTaskCompletion(i));
+
         li.appendChild(titleElement);
         li.appendChild(descriptionElement);
         li.appendChild(editBtn);
         li.appendChild(deleteBtn);
+        li.appendChild(completedBtn);
 
         taskList.appendChild(li);
     }
@@ -90,6 +103,14 @@ function deleteTask(index) {
     renderTasks();
 }
 
+function toggleTaskCompletion(index) {
+    tasks[index].completed = !tasks[index].completed;
+    saveTasks();
+    renderTasks();
+}
+
 function saveTasks() {
     localStorage.setItem('tasks', JSON.stringify(tasks));
 }
+
+addTaskBtn.addEventListener('click', addTask);
